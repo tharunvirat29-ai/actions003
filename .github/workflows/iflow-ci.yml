@@ -23,8 +23,8 @@ jobs:
       # Check naming convention in MANIFEST
       - name: Check naming convention
         run: |
-          if ! grep -E "^Bundle-Name: ci[0-9]+" META-INF/MANIFEST.MF; then
-            echo "❌ Bundle-Name must start with 'ci' followed by numbers (e.g., ci001)"
+          if ! grep -E "^Bundle-Name: order[0-9]+" META-INF/MANIFEST.MF; then
+            echo "❌ Bundle-Name must start with 'order' followed by numbers (e.g., ci001)"
             exit 1
           fi
           echo "✅ Bundle-Name naming convention passed"
