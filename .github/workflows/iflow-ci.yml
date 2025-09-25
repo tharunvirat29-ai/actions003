@@ -24,8 +24,8 @@ jobs:
         run: |
           curl --request POST '${{ secrets.IFLOW_ENDPOINT_URL }}' \
           --user '${{ secrets.CPI_USERNAME }}:${{ secrets.CPI_PASSWORD }}' \
-          --header 'Content-Type: application/xml' \
-          --data '<Order><OrderID>tharun</OrderID></Order>' \
+          --header 'Content-Type: text/plain' \
+          --data 'tharun' \
           --output response.xml --fail
       
       - name: Check iFlow response
