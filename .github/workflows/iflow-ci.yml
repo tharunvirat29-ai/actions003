@@ -1,37 +1,35 @@
-name: CPI Trigger
+name: Full iFlow CI/CD Pipeline
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
-  trigger-cpi:
+  static-analysis:
+    name: Static Analysis
     runs-on: ubuntu-latest
-
     steps:
-      - name: Request OAuth Token
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Check for correct XPath
+        run: grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw
+      
+      - name: Check naming convention
+        run: grep "Bundle-Name: ci" META-INF/MANIFEST.MF
+
+  integration-test:
+    name: Live Integration Test
+    runs-on: ubuntu-latest
+    needs: static-analysis
+    steps:
+      - name: Send test message to iFlow
         run: |
-          RESPONSE=$(curl -s --request POST \
-            "https://78caf6actrial.authentication.us10.hana.ondemand.com/oauth/token" \
-            --header "Content-Type: application/x-www-form-urlencoded" \
-            --data "grant_type=client_credentials&client_id=sb-6e4056a9-8c20-4fd8-8ad4-033206537def!b513538|it-rt-78caf6actrial!b55215&client_secret=992d124b-b0a4-4b30-9230-3fc79a7e6e0f$Mv7h5VqlyA4Pgh3rRD-He5Q2X7hiWTyEdeZRqy28nuE=")
-
-          echo "🔎 Raw response: $RESPONSE"
-          TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
-
-          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-            echo "❌ Failed to retrieve access token"
-            exit 1
-          fi
-
-          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "✅ OAuth token retrieved"
-
-      - name: Call CPI iFlow
-        run: |
-          curl -v --request POST \
-            "https://78caf6actrial.it-cpitrial06-rt.cfapps.us10-001.hana.ondemand.com/http/YourIFlowEndpoint" \
-            --header "Authorization: Bearer $TOKEN" \
-            --header "Content-Type: application/json" \
-            --data '{"message":"Hello from GitHub Actions"}'
-
-
+          curl --request POST '${{ secrets.IFLOW_ENDPOINT_URL }}' \
+          --user '${{ secrets.CPI_CLIENT_ID }}:${{ secrets.CPI_CLIENT_SECRET }}' \
+          --header 'Content-Type: text/plain' \
+          --data 'tharun' \
+          --output response.xml --fail
+      
+      - name: Check iFlow response
+        run: grep "<name>tharun</name>" response.xml
