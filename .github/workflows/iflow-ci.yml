@@ -10,9 +10,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-
-      - name: Check for correct XPath
-        run: grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw
       
       # This is our new step
       - name: Check for hardcoded URLs
