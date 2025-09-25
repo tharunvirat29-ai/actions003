@@ -1,17 +1,18 @@
-name: iFlow Test
+name: Full iFlow CI/CD Pipeline
 
 on:
   push:
     branches: [main]
 
 jobs:
-  test-iflow:
+  static-analysis:
+    name: Static Analysis
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      # Check for required XPath in iFlow
+      # Check for required XPath in iFlow definition
       - name: Check for correct XPath
         run: |
           if ! grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw; then
@@ -24,7 +25,28 @@ jobs:
       - name: Check naming convention
         run: |
           if ! grep -E "^Bundle-Name: ci[0-9]+" META-INF/MANIFEST.MF; then
-            echo "❌ Bundle-Name must start with 'ci' followed by numbers (e.g., ci001)"
+            echo "❌ Bundle-Name must start with 'ci' followed by digits (e.g., ci001)"
             exit 1
           fi
           echo "✅ Bundle-Name naming convention passed"
+
+  integration-test:
+    name: Live Integration Test
+    runs-on: ubuntu-latest
+    needs: static-analysis # Only runs if static-analysis passes
+    steps:
+      - name: Send test message to iFlow
+        run: |
+          curl --request POST "${{ secrets.IFLOW_ENDPOINT_URL }}" \
+          --header "Content-Type: text/plain" \
+          --data "tharun" \
+          --output response.xml --fail
+
+      - name: Check iFlow response
+        run: |
+          if ! grep "<name>tharun</name>" response.xml; then
+            echo "❌ iFlow response does not contain expected output"
+            cat response.xml
+            exit 1
+          fi
+          echo "✅ iFlow response check passed"
