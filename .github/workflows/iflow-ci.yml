@@ -11,9 +11,20 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
+      # Check for required XPath in iFlow
       - name: Check for correct XPath
-        run: grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw
-      
-      # This is our new step
+        run: |
+          if ! grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw; then
+            echo "❌ Missing /Order/OrderID in ci001.iflw"
+            exit 1
+          fi
+          echo "✅ XPath check passed"
+
+      # Check naming convention in MANIFEST
       - name: Check naming convention
-        run: grep "Bundle-Name: ci" META-INF/MANIFEST.MF
+        run: |
+          if ! grep -E "^Bundle-Name: ci[0-9]+" META-INF/MANIFEST.MF; then
+            echo "❌ Bundle-Name must start with 'ci' followed by numbers (e.g., ci001)"
+            exit 1
+          fi
+          echo "✅ Bundle-Name naming convention passed"
