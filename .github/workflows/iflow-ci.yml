@@ -16,4 +16,4 @@ jobs:
       
       # This is our new step
       - name: Check for hardcoded URLs
-        run: '! grep -r "https://webhook.site/6c7154ae-36c5-4cef-9b2f-bf8a86b27a3a" --exclude=parameters.prop'
+        run: '! grep -r "https://webhook.site/6c7154ae-36c5-4cef-9b2f-bf8a86b27a3a"'
