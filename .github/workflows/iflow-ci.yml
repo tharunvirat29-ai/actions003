@@ -33,11 +33,28 @@ jobs:
   integration-test:
     name: Live Integration Test
     runs-on: ubuntu-latest
-    needs: static-analysis # Only runs if static-analysis passes
+    needs: static-analysis
     steps:
+      - name: Get OAuth token
+        run: |
+          TOKEN=$(curl -s --request POST \
+            "${{ secrets.CPI_URL }}" \
+            --header "Content-Type: application/x-www-form-urlencoded" \
+            --data "grant_type=client_credentials&client_id=${{ secrets.CPI_CLIENT_ID }}&client_secret=${{ secrets.CPI_CLIENT_SECRET }}" \
+            | jq -r '.access_token')
+
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "❌ Failed to retrieve access token"
+            exit 1
+          fi
+
+          echo "TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "✅ OAuth token retrieved"
+
       - name: Send test message to iFlow
         run: |
-          curl --request POST "${{ secrets.IFLOW_ENDPOINT_URL }}" \
+          curl --request POST "${{ secrets.IFLOW_URL }}" \
+          --header "Authorization: Bearer $TOKEN" \
           --header "Content-Type: text/plain" \
           --data "tharun" \
           --output response.xml --fail
@@ -50,3 +67,4 @@ jobs:
             exit 1
           fi
           echo "✅ iFlow response check passed"
+
