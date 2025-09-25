@@ -27,7 +27,6 @@ jobs:
           --header 'Content-Type: application/xml' \
           --data '<Order><OrderID>tharun</OrderID></Order>' \
           --output response.xml --fail
-
+      
       - name: Check iFlow response
         run: grep "<name>tharun</name>" response.xml
-
