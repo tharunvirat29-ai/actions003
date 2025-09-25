@@ -14,6 +14,9 @@ jobs:
 
       - name: Check for correct XPath
         run: grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw
+      
+      - name: Check naming convention
+        run: grep "Bundle-Name: ci" META-INF/MANIFEST.MF
 
   integration-test:
     name: Live Integration Test
@@ -23,10 +26,10 @@ jobs:
       - name: Send test message to iFlow
         run: |
           curl --request POST '${{ secrets.IFLOW_ENDPOINT_URL }}' \
-          --user '${{ secrets.CPI_CLIENT_ID }}:${{ secrets.CPI_CLIENT_SECRET }}' \
-          --header 'Content-Type: text/plain' \
-          --data 'tharun' \
+          --user '${{ secrets.CPI_USERNAME }}:${{ secrets.CPI_PASSWORD }}' \
+          --header 'Content-Type: application/xml' \
+          --data '<Order><OrderID>tharun</OrderID></Order>' \
           --output response.xml --fail
-
+      
       - name: Check iFlow response
         run: grep "<name>tharun</name>" response.xml
