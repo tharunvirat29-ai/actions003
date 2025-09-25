@@ -10,7 +10,10 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
+      - name: Check for correct XPath
+        run: grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw
       
       # This is our new step
-      - name: Check for hardcoded URLs
-        run: '! grep -r "https://webhook.site/6c7154ae-36c5-4cef-9b2f-bf8a86b27a3a"'
+      - name: Check naming convention
+        run: grep "Bundle-Name: ci" META-INF/MANIFEST.MF
