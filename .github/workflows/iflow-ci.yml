@@ -12,7 +12,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      # Check for required XPath in iFlow definition
       - name: Check for correct XPath
         run: |
           if ! grep "/Order/OrderID" src/main/resources/scenarioflows/integrationflow/ci001.iflw; then
@@ -21,7 +20,6 @@ jobs:
           fi
           echo "✅ XPath check passed"
 
-      # Check naming convention in MANIFEST
       - name: Check naming convention
         run: |
           if ! grep -E "^Bundle-Name: ci[0-9]+" META-INF/MANIFEST.MF; then
@@ -37,11 +35,13 @@ jobs:
     steps:
       - name: Get OAuth token
         run: |
-          TOKEN=$(curl -s --request POST \
-            "${{ secrets.CPI_URL }}" \
+          RESPONSE=$(curl -s --request POST \
+            "https://78caf6actrial.authentication.us10.hana.ondemand.com/oauth/token" \
             --header "Content-Type: application/x-www-form-urlencoded" \
-            --data "grant_type=client_credentials&client_id=${{ secrets.CPI_CLIENT_ID }}&client_secret=${{ secrets.CPI_CLIENT_SECRET }}" \
-            | jq -r '.access_token')
+            --data "grant_type=client_credentials&client_id=${{ secrets.CPI_CLIENT_ID }}&client_secret=${{ secrets.CPI_CLIENT_SECRET }}")
+
+          echo "🔎 Raw response: $RESPONSE"
+          TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
 
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
             echo "❌ Failed to retrieve access token"
@@ -53,7 +53,7 @@ jobs:
 
       - name: Send test message to iFlow
         run: |
-          curl --request POST "${{ secrets.IFLOW_URL }}" \
+          curl --request POST "https://78caf6actrial.it-cpitrial06-rt.cfapps.us10-001.hana.ondemand.com/http/testci001" \
           --header "Authorization: Bearer $TOKEN" \
           --header "Content-Type: text/plain" \
           --data "tharun" \
